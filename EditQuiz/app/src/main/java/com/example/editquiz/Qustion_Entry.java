@@ -104,7 +104,9 @@ public class Qustion_Entry extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mDatabase = FirebaseDatabase.getInstance().getReference().child("Questions");
+                //Storing Timer for Quiz
                 DatabaseReference mdb = FirebaseDatabase.getInstance().getReference().child("time");
+                //Storing Questions
                 for(int i = 0;i<Questions_list.size();i++)
                 {
                     mDatabase.child(String.valueOf(i+1)).setValue(Questions_list.get(i));
