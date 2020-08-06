@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "135197666356",
+    "firebase_url": "https://mini-quiz-dbaae.firebaseio.com",
+    "project_id": "mini-quiz-dbaae",
+    "storage_bucket": "mini-quiz-dbaae.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:135197666356:android:59f1767238ad532eb36e61",
+        "android_client_info": {
+          "package_name": "com.example.editquiz"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "135197666356-nmmtvnomnv0dusk27r26ccgdi6b2tbvg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHOpZ4pYQbH9qmqE1a-aUt4RGjaCiW88M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "135197666356-nmmtvnomnv0dusk27r26ccgdi6b2tbvg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:135197666356:android:c97e71000cc7330fb36e61",
+        "android_client_info": {
+          "package_name": "com.example.miniquiz"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "135197666356-nmmtvnomnv0dusk27r26ccgdi6b2tbvg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHOpZ4pYQbH9qmqE1a-aUt4RGjaCiW88M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "135197666356-nmmtvnomnv0dusk27r26ccgdi6b2tbvg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
