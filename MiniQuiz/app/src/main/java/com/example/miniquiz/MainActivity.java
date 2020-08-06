@@ -2,9 +2,15 @@ package com.example.miniquiz;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.content.Intent;
-import android.graphics.Color;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -12,25 +18,70 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.miniquiz.modal.Question;
+import com.example.miniquiz.modal.coordinate;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-public class MainActivity extends AppCompatActivity {
+import java.security.PublicKey;
+
+public class MainActivity extends AppCompatActivity implements LocationListener {
     Button b1,b2,b3,b4;
     TextView t1_question,timerTxt;
     int total = 0;
     int correct = 0;
     int wrong = 0;
     DatabaseReference ref;
+    DatabaseReference mDatabase;
+    LocationManager locationManager;
+    Location location;
+    coordinate coord;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //runtime permissions
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{
+                    Manifest.permission.ACCESS_FINE_LOCATION
+            }, 100);
+        }
+        getLocation();//storing location in DB of this app
+        if(locationManager != null){
+            location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            //Log.d(TAG, location == null ? "NO LastLocation" : location.toString());
+
+            mDatabase = FirebaseDatabase.getInstance().getReference().child("EditQuizLoc");
+            mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    coord = dataSnapshot.getValue(com.example.miniquiz.modal.coordinate.class);
+                    Log.d("TaG", "Latitude Of EditQUiz"+String.valueOf(coord.Latitude));
+                    Log.d("TaG", "Longitude Of EditQUiz"+String.valueOf(coord.Longitude));
+                    Log.d("TaG", "Latitude Of MiniQuiz"+String.valueOf(location.getLatitude()));
+                    Log.d("TaG", "Longitude Of MiniQuiz"+String.valueOf(location.getLongitude()));
+
+                    double distance = getdistance(location.getLatitude(),coord.Latitude,location.getLongitude(),coord.Longitude);
+                    Log.d("TaG", "Distance = "+String.valueOf(distance));
+                    if(distance > 15) {
+                        circumferenceRestriction();
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+        }
+
+
         b1 = (Button)findViewById(R.id.button1);
         b2 = (Button)findViewById(R.id.button2);
         b3 = (Button)findViewById(R.id.button3);
@@ -54,6 +105,17 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+
+
+    private void getLocation() {
+        try {
+            locationManager = (LocationManager) getApplicationContext().getSystemService(LOCATION_SERVICE);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 5, MainActivity.this);
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void onBackPressed()
     {
@@ -298,5 +360,63 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(myIntent);
             }
         }.start();
+    }
+    public double getdistance(double lat1,
+                                  double lat2, double lon1,
+                                  double lon2)
+    {
+
+        // The math module contains a function
+        // named toRadians which converts from
+        // degrees to radians.
+        lon1 = Math.toRadians(lon1);
+        lon2 = Math.toRadians(lon2);
+        lat1 = Math.toRadians(lat1);
+        lat2 = Math.toRadians(lat2);
+
+        // Haversine formula
+        double dlon = lon2 - lon1;
+        double dlat = lat2 - lat1;
+        double a = Math.pow(Math.sin(dlat / 2), 2)
+                + Math.cos(lat1) * Math.cos(lat2)
+                * Math.pow(Math.sin(dlon / 2),2);
+
+        double c = 2 * Math.asin(Math.sqrt(a));
+
+        // Radius of earth in kilometers. Use 3956
+        // for miles
+        double r = 6371000;//for meters
+
+        // calculate the result
+        return(c * r);
+    }
+    @Override
+    public void onLocationChanged(Location location) {
+
+        Toast.makeText(this,"Location Changed"+location.getLatitude()+","+location.getLongitude(),Toast.LENGTH_SHORT).show();
+        if(coord != null) {
+            double distance = getdistance(location.getLatitude(), coord.Latitude, location.getLongitude(), coord.Longitude);
+            Log.d("TaG", "Distance = " + String.valueOf(distance));
+            if (distance > 15) {
+                circumferenceRestriction();
+            }
+        }
+    }
+    public void circumferenceRestriction(){
+        Toast.makeText(this,"You Are out Of Circumference",Toast.LENGTH_SHORT).show();
+    }
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+
     }
 }

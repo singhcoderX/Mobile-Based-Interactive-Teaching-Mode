@@ -53,6 +53,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             //Log.d(TAG, location == null ? "NO LastLocation" : location.toString());
             mDatabase = FirebaseDatabase.getInstance().getReference();
             mDatabase.child("EditQuizLoc").removeValue();
+            //mDatabase.child("EditQuizLoc").child("Latitude").setValue(String.valueOf(location.getLatitude()));
+            //mDatabase.child("EditQuizLoc").child("Longitude").setValue(String.valueOf(location.getLongitude()));
             mDatabase.child("EditQuizLoc").child("Latitude").setValue(location.getLatitude());
             mDatabase.child("EditQuizLoc").child("Longitude").setValue(location.getLongitude());
         }
