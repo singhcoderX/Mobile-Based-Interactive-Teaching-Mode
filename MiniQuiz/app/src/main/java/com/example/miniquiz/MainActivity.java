@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -45,7 +46,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         //runtime permissions
         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{
@@ -70,7 +70,29 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     double distance = getdistance(location.getLatitude(),coord.Latitude,location.getLongitude(),coord.Longitude);
                     Log.d("TaG", "Distance = "+String.valueOf(distance));
                     if(distance > 15) {
-                        circumferenceRestriction();
+                        circumferenceRestriction(distance);
+                    }else{
+                        b1 = (Button)findViewById(R.id.button1);
+                        b2 = (Button)findViewById(R.id.button2);
+                        b3 = (Button)findViewById(R.id.button3);
+                        b4 = (Button)findViewById(R.id.button4);
+
+                        t1_question = (TextView)findViewById(R.id.questionTxt);
+                        timerTxt = (TextView)findViewById(R.id.timerTxt);
+                        updateQuestion();
+                        DatabaseReference timer = FirebaseDatabase.getInstance().getReference().child("time");
+                        timer.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                int rev_timer = Integer.parseInt(dataSnapshot.getValue().toString());
+                                reverseTimer(rev_timer*60,timerTxt);
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                            }
+                        });
                     }
                 }
 
@@ -82,27 +104,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
 
 
-        b1 = (Button)findViewById(R.id.button1);
-        b2 = (Button)findViewById(R.id.button2);
-        b3 = (Button)findViewById(R.id.button3);
-        b4 = (Button)findViewById(R.id.button4);
 
-        t1_question = (TextView)findViewById(R.id.questionTxt);
-        timerTxt = (TextView)findViewById(R.id.timerTxt);
-        updateQuestion();
-        DatabaseReference timer = FirebaseDatabase.getInstance().getReference().child("time");
-        timer.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                int rev_timer = Integer.parseInt(dataSnapshot.getValue().toString());
-                reverseTimer(rev_timer*60,timerTxt);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
 
     }
 
@@ -155,13 +157,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                 @Override
                                 public void onClick(View v) {
                                     if(b1.getText().toString().equals(ques.getAnswer()))
-                                    {   //b1.setBackgroundColor(Color.GREEN);
+                                    {   b1.setBackgroundColor(Color.GREEN);
                                         Handler handler = new Handler();
                                         handler.postDelayed(new Runnable() {
                                             @Override
                                             public void run() {
                                                 correct++;
-                                                //b1.setBackgroundColor(Color.parseColor("#03A9F4"));
+                                                b1.setBackgroundColor(Color.parseColor("#03A9F4"));
                                                 updateQuestion();
                                             }
                                         },1500);
@@ -169,8 +171,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                     {
                                         //answer is wrong so we need to find correct answer and make it green
                                         wrong ++;
-                                        //b1.setBackgroundColor(Color.RED);
-                                        /*if(b2.getText().toString().equals(ques.getAnswer()))
+                                        b1.setBackgroundColor(Color.RED);
+                                        if(b2.getText().toString().equals(ques.getAnswer()))
                                         {
                                             b2.setBackgroundColor(Color.GREEN);
                                         }else if(b3.getText().toString().equals(ques.getAnswer()))
@@ -178,15 +180,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                             b3.setBackgroundColor(Color.GREEN);
                                         }else {
                                             b4.setBackgroundColor(Color.GREEN);
-                                        }*/
+                                        }
                                         Handler handler = new Handler();
                                         handler.postDelayed(new Runnable() {
                                             @Override
                                             public void run() {
-                                                /*b1.setBackgroundColor(Color.parseColor("#03A9F4"));
+                                                b1.setBackgroundColor(Color.parseColor("#03A9F4"));
                                                 b2.setBackgroundColor(Color.parseColor("#03A9F4"));
                                                 b3.setBackgroundColor(Color.parseColor("#03A9F4"));
-                                                b4.setBackgroundColor(Color.parseColor("#03A9F4"));*/
+                                                b4.setBackgroundColor(Color.parseColor("#03A9F4"));
                                                 updateQuestion();
                                             }
                                         },1500);
@@ -198,13 +200,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                 @Override
                                 public void onClick(View v) {
                                     if(b2.getText().toString().equals(ques.getAnswer()))
-                                    {   //b2.setBackgroundColor(Color.GREEN);
+                                    {   b2.setBackgroundColor(Color.GREEN);
                                         Handler handler = new Handler();
                                         handler.postDelayed(new Runnable() {
                                             @Override
                                             public void run() {
                                                 correct++;
-                                                //b2.setBackgroundColor(Color.parseColor("#03A9F4"));
+                                                b2.setBackgroundColor(Color.parseColor("#03A9F4"));
                                                 updateQuestion();
                                             }
                                         },1500);
@@ -212,7 +214,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                     {
                                         //answer is wrong so we need to find correct answer and make it green
                                         wrong ++;
-                                        /*b2.setBackgroundColor(Color.RED);
+                                        b2.setBackgroundColor(Color.RED);
                                         if(b1.getText().toString().equals(ques.getAnswer()))
                                         {
                                             b1.setBackgroundColor(Color.GREEN);
@@ -221,15 +223,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                             b3.setBackgroundColor(Color.GREEN);
                                         }else {
                                             b4.setBackgroundColor(Color.GREEN);
-                                        }*/
+                                        }
                                         Handler handler = new Handler();
                                         handler.postDelayed(new Runnable() {
                                             @Override
                                             public void run() {
-                                               /* b1.setBackgroundColor(Color.parseColor("#03A9F4"));
+                                                b1.setBackgroundColor(Color.parseColor("#03A9F4"));
                                                 b2.setBackgroundColor(Color.parseColor("#03A9F4"));
                                                 b3.setBackgroundColor(Color.parseColor("#03A9F4"));
-                                                b4.setBackgroundColor(Color.parseColor("#03A9F4"));*/
+                                                b4.setBackgroundColor(Color.parseColor("#03A9F4"));
                                                 updateQuestion();
                                             }
                                         },1500);
@@ -241,13 +243,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                 @Override
                                 public void onClick(View v) {
                                     if(b3.getText().toString().equals(ques.getAnswer()))
-                                    {   //b3.setBackgroundColor(Color.GREEN);
+                                    {   b3.setBackgroundColor(Color.GREEN);
                                         Handler handler = new Handler();
                                         handler.postDelayed(new Runnable() {
                                             @Override
                                             public void run() {
                                                 correct++;
-                                                //b3.setBackgroundColor(Color.parseColor("#03A9F4"));
+                                                b3.setBackgroundColor(Color.parseColor("#03A9F4"));
                                                 updateQuestion();
                                             }
                                         },1500);
@@ -255,7 +257,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                     {
                                         //answer is wrong so we need to find correct answer and make it green
                                         wrong ++;
-                                        /*b3.setBackgroundColor(Color.RED);
+                                        b3.setBackgroundColor(Color.RED);
                                         if(b2.getText().toString().equals(ques.getAnswer()))
                                         {
                                             b2.setBackgroundColor(Color.GREEN);
@@ -264,15 +266,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                             b1.setBackgroundColor(Color.GREEN);
                                         }else {
                                             b4.setBackgroundColor(Color.GREEN);
-                                        }*/
+                                        }
                                         Handler handler = new Handler();
                                         handler.postDelayed(new Runnable() {
                                             @Override
                                             public void run() {
-                                                /*b1.setBackgroundColor(Color.parseColor("#03A9F4"));
+                                                b1.setBackgroundColor(Color.parseColor("#03A9F4"));
                                                 b2.setBackgroundColor(Color.parseColor("#03A9F4"));
                                                 b3.setBackgroundColor(Color.parseColor("#03A9F4"));
-                                                b4.setBackgroundColor(Color.parseColor("#03A9F4"));*/
+                                                b4.setBackgroundColor(Color.parseColor("#03A9F4"));
                                                 updateQuestion();
                                             }
                                         },1500);
@@ -284,13 +286,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                 @Override
                                 public void onClick(View v) {
                                     if(b4.getText().toString().equals(ques.getAnswer()))
-                                    {   //b4.setBackgroundColor(Color.GREEN);
+                                    {   b4.setBackgroundColor(Color.GREEN);
                                         Handler handler = new Handler();
                                         handler.postDelayed(new Runnable() {
                                             @Override
                                             public void run() {
                                                 correct++;
-                                                //b1.setBackgroundColor(Color.parseColor("#03A9F4"));
+                                                b4.setBackgroundColor(Color.parseColor("#03A9F4"));
                                                 updateQuestion();
                                             }
                                         },1500);
@@ -298,7 +300,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                     {
                                         //answer is wrong so we need to find correct answer and make it green
                                         wrong ++;
-                                        /*b4.setBackgroundColor(Color.RED);
+                                        b4.setBackgroundColor(Color.RED);
                                         if(b2.getText().toString().equals(ques.getAnswer()))
                                         {
                                             b2.setBackgroundColor(Color.GREEN);
@@ -307,15 +309,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                             b3.setBackgroundColor(Color.GREEN);
                                         }else {
                                             b1.setBackgroundColor(Color.GREEN);
-                                        }*/
+                                        }
                                         Handler handler = new Handler();
                                         handler.postDelayed(new Runnable() {
                                             @Override
                                             public void run() {
-                                                /*b1.setBackgroundColor(Color.parseColor("#03A9F4"));
+                                                b1.setBackgroundColor(Color.parseColor("#03A9F4"));
                                                 b2.setBackgroundColor(Color.parseColor("#03A9F4"));
                                                 b3.setBackgroundColor(Color.parseColor("#03A9F4"));
-                                                b4.setBackgroundColor(Color.parseColor("#03A9F4"));*/
+                                                b4.setBackgroundColor(Color.parseColor("#03A9F4"));
                                                 updateQuestion();
                                             }
                                         },1500);
@@ -348,8 +350,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 int seconds = (int) (milliUtilFinished / 1000);
                 int minutes = seconds / 60;
                  seconds = seconds%60;
-                 tv.setText(String.format("%02d",minutes)+
-                         ":"+String.format("%02d",seconds));
+                 tv.setText(String.format("%02d",minutes)+":"+String.format("%02d",seconds));
             }
             public void onFinish(){
                 tv.setText("Finished");
@@ -398,12 +399,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             double distance = getdistance(location.getLatitude(), coord.Latitude, location.getLongitude(), coord.Longitude);
             Log.d("TaG", "Distance = " + String.valueOf(distance));
             if (distance > 15) {
-                circumferenceRestriction();
+                circumferenceRestriction(distance);
             }
         }
     }
-    public void circumferenceRestriction(){
-        Toast.makeText(this,"You Are out Of Circumference",Toast.LENGTH_SHORT).show();
+    public void circumferenceRestriction(double distance){
+        Toast.makeText(this,"You Are out Of Circumference:"+String.valueOf(distance-15)+" meters",Toast.LENGTH_SHORT).show();
     }
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
