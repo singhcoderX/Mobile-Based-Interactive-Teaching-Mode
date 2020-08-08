@@ -29,11 +29,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.security.PublicKey;
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
-    Button b1,b2,b3,b4;
-    TextView t1_question,timerTxt;
+    Button b1, b2, b3, b4;
+    TextView t1_question, timerTxt;
     int total = 0;
     int correct = 0;
     int wrong = 0;
@@ -42,18 +41,23 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     LocationManager locationManager;
     Location location;
     coordinate coord;
+    boolean isBackground = false;
+    boolean resultt = false;
+    int restricton;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        restricton = 15;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         //runtime permissions
         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{
-                    Manifest.permission.ACCESS_FINE_LOCATION
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
             }, 100);
         }
         getLocation();//storing location in DB of this app
-        if(locationManager != null){
+        if (locationManager != null) {
             location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
             //Log.d(TAG, location == null ? "NO LastLocation" : location.toString());
 
@@ -61,31 +65,38 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (!dataSnapshot.exists()){
+                        openHold();
+                        return;
+                    }
                     coord = dataSnapshot.getValue(com.example.miniquiz.modal.coordinate.class);
-                    Log.d("TaG", "Latitude Of EditQUiz"+String.valueOf(coord.Latitude));
-                    Log.d("TaG", "Longitude Of EditQUiz"+String.valueOf(coord.Longitude));
-                    Log.d("TaG", "Latitude Of MiniQuiz"+String.valueOf(location.getLatitude()));
-                    Log.d("TaG", "Longitude Of MiniQuiz"+String.valueOf(location.getLongitude()));
+                    Log.d("TaG", "Latitude Of EditQUiz" + String.valueOf(coord.Latitude));
+                    Log.d("TaG", "Longitude Of EditQUiz" + String.valueOf(coord.Longitude));
+                    Log.d("TaG", "Latitude Of MiniQuiz" + String.valueOf(location.getLatitude()));
+                    Log.d("TaG", "Longitude Of MiniQuiz" + String.valueOf(location.getLongitude()));
 
-                    double distance = getdistance(location.getLatitude(),coord.Latitude,location.getLongitude(),coord.Longitude);
-                    Log.d("TaG", "Distance = "+String.valueOf(distance));
-                    if(distance > 15) {
+                    double distance = getdistance(location.getLatitude(), coord.Latitude, location.getLongitude(), coord.Longitude);
+                    Log.d("TaG", "Distance = " + String.valueOf(distance));
+                    if (distance > restricton) {
                         circumferenceRestriction(distance);
-                    }else{
-                        b1 = (Button)findViewById(R.id.button1);
-                        b2 = (Button)findViewById(R.id.button2);
-                        b3 = (Button)findViewById(R.id.button3);
-                        b4 = (Button)findViewById(R.id.button4);
+                    } else {
+                        b1 = (Button) findViewById(R.id.button1);
+                        b2 = (Button) findViewById(R.id.button2);
+                        b3 = (Button) findViewById(R.id.button3);
+                        b4 = (Button) findViewById(R.id.button4);
 
-                        t1_question = (TextView)findViewById(R.id.questionTxt);
-                        timerTxt = (TextView)findViewById(R.id.timerTxt);
+                        t1_question = (TextView) findViewById(R.id.questionTxt);
+                        timerTxt = (TextView) findViewById(R.id.timerTxt);
                         updateQuestion();
                         DatabaseReference timer = FirebaseDatabase.getInstance().getReference().child("time");
                         timer.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                if (!dataSnapshot.exists()) {
+                                    return;
+                                }
                                 int rev_timer = Integer.parseInt(dataSnapshot.getValue().toString());
-                                reverseTimer(rev_timer*60,timerTxt);
+                                reverseTimer(rev_timer * 60, timerTxt);
                             }
 
                             @Override
@@ -103,28 +114,49 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             });
         }
 
-
-
-
     }
 
+    @Override
+    public void onBackPressed() {
+    }
+
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        if (level == TRIM_MEMORY_UI_HIDDEN) {
+            isBackground = true;
+        }
+    }
 
     private void getLocation() {
         try {
             locationManager = (LocationManager) getApplicationContext().getSystemService(LOCATION_SERVICE);
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 5, MainActivity.this);
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(MainActivity.this, new String[]{
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                }, 100);
+            }else {
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 5, MainActivity.this);
+            }
         }catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-    @Override
-    public void onBackPressed()
-    {
-
-    }
     private void updateQuestion() {
         total++;
+        if(isBackground == true )
+        {
+            Toast.makeText(getApplicationContext(),"Your Quiz has ended Because u pressed Home button",Toast.LENGTH_SHORT).show();
+            Intent myIntent  = new Intent(MainActivity.this,ResultActivity.class);
+            myIntent.putExtra("total",String.valueOf(total-1));
+            myIntent.putExtra("correct",String.valueOf(correct));
+            myIntent.putExtra("incorrect",String.valueOf(wrong));
+            resultt = true;
+            Log.d("TAG","Result ACt1");
+            startActivity(myIntent);
+            return;
+        }
         final long[] total_count = new long[1];
         DatabaseReference total_count_db = FirebaseDatabase.getInstance().getReference().child("Questions");
         total_count_db.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -132,16 +164,31 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 total_count[0] = dataSnapshot.getChildrenCount();
                 Log.d("TAG","Totoal count = "+total_count[0]);
+
+                if(total_count[0] == 0)
+                {
+                    //no entries of Questions
+                    Intent intent = new Intent(MainActivity.this,hold.class);
+                    resultt = true;
+                    startActivity(intent);
+                    return;
+
+                }
+                Log.d("TAG","timestamp1");
                 if(total > total_count[0]){
                     //open result activity
                     Intent myIntent  = new Intent(MainActivity.this,ResultActivity.class);
                     myIntent.putExtra("total",String.valueOf(total-1));
                     myIntent.putExtra("correct",String.valueOf(correct));
                     myIntent.putExtra("incorrect",String.valueOf(wrong));
+                    resultt = true;
+                    Log.d("TAG","Result ACt2");
                     startActivity(myIntent);
+
 
                 }else
                 {
+                    Log.d("TAG","timestamp2");
                     ref = FirebaseDatabase.getInstance().getReference().child("Questions").child(String.valueOf(total));
                     ref.addValueEventListener(new ValueEventListener() {
                         @Override
@@ -172,23 +219,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                         //answer is wrong so we need to find correct answer and make it green
                                         wrong ++;
                                         b1.setBackgroundColor(Color.RED);
-                                        if(b2.getText().toString().equals(ques.getAnswer()))
-                                        {
-                                            b2.setBackgroundColor(Color.GREEN);
-                                        }else if(b3.getText().toString().equals(ques.getAnswer()))
-                                        {
-                                            b3.setBackgroundColor(Color.GREEN);
-                                        }else {
-                                            b4.setBackgroundColor(Color.GREEN);
-                                        }
                                         Handler handler = new Handler();
                                         handler.postDelayed(new Runnable() {
                                             @Override
                                             public void run() {
                                                 b1.setBackgroundColor(Color.parseColor("#03A9F4"));
-                                                b2.setBackgroundColor(Color.parseColor("#03A9F4"));
-                                                b3.setBackgroundColor(Color.parseColor("#03A9F4"));
-                                                b4.setBackgroundColor(Color.parseColor("#03A9F4"));
                                                 updateQuestion();
                                             }
                                         },1500);
@@ -215,23 +250,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                         //answer is wrong so we need to find correct answer and make it green
                                         wrong ++;
                                         b2.setBackgroundColor(Color.RED);
-                                        if(b1.getText().toString().equals(ques.getAnswer()))
-                                        {
-                                            b1.setBackgroundColor(Color.GREEN);
-                                        }else if(b3.getText().toString().equals(ques.getAnswer()))
-                                        {
-                                            b3.setBackgroundColor(Color.GREEN);
-                                        }else {
-                                            b4.setBackgroundColor(Color.GREEN);
-                                        }
+
                                         Handler handler = new Handler();
                                         handler.postDelayed(new Runnable() {
                                             @Override
                                             public void run() {
-                                                b1.setBackgroundColor(Color.parseColor("#03A9F4"));
+
                                                 b2.setBackgroundColor(Color.parseColor("#03A9F4"));
-                                                b3.setBackgroundColor(Color.parseColor("#03A9F4"));
-                                                b4.setBackgroundColor(Color.parseColor("#03A9F4"));
+
                                                 updateQuestion();
                                             }
                                         },1500);
@@ -258,23 +284,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                         //answer is wrong so we need to find correct answer and make it green
                                         wrong ++;
                                         b3.setBackgroundColor(Color.RED);
-                                        if(b2.getText().toString().equals(ques.getAnswer()))
-                                        {
-                                            b2.setBackgroundColor(Color.GREEN);
-                                        }else if(b1.getText().toString().equals(ques.getAnswer()))
-                                        {
-                                            b1.setBackgroundColor(Color.GREEN);
-                                        }else {
-                                            b4.setBackgroundColor(Color.GREEN);
-                                        }
+
                                         Handler handler = new Handler();
                                         handler.postDelayed(new Runnable() {
                                             @Override
                                             public void run() {
-                                                b1.setBackgroundColor(Color.parseColor("#03A9F4"));
-                                                b2.setBackgroundColor(Color.parseColor("#03A9F4"));
+
                                                 b3.setBackgroundColor(Color.parseColor("#03A9F4"));
-                                                b4.setBackgroundColor(Color.parseColor("#03A9F4"));
+
                                                 updateQuestion();
                                             }
                                         },1500);
@@ -301,22 +318,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                         //answer is wrong so we need to find correct answer and make it green
                                         wrong ++;
                                         b4.setBackgroundColor(Color.RED);
-                                        if(b2.getText().toString().equals(ques.getAnswer()))
-                                        {
-                                            b2.setBackgroundColor(Color.GREEN);
-                                        }else if(b3.getText().toString().equals(ques.getAnswer()))
-                                        {
-                                            b3.setBackgroundColor(Color.GREEN);
-                                        }else {
-                                            b1.setBackgroundColor(Color.GREEN);
-                                        }
+
                                         Handler handler = new Handler();
                                         handler.postDelayed(new Runnable() {
                                             @Override
                                             public void run() {
-                                                b1.setBackgroundColor(Color.parseColor("#03A9F4"));
-                                                b2.setBackgroundColor(Color.parseColor("#03A9F4"));
-                                                b3.setBackgroundColor(Color.parseColor("#03A9F4"));
+
                                                 b4.setBackgroundColor(Color.parseColor("#03A9F4"));
                                                 updateQuestion();
                                             }
@@ -333,6 +340,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         }
                     });
                 }
+
             }
 
             @Override
@@ -350,21 +358,25 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 int seconds = (int) (milliUtilFinished / 1000);
                 int minutes = seconds / 60;
                  seconds = seconds%60;
-                 tv.setText(String.format("%02d",minutes)+":"+String.format("%02d",seconds));
+                 tv.setText(String.format("%02d",minutes)+
+                         ":"+String.format("%02d",seconds));
             }
             public void onFinish(){
                 tv.setText("Finished");
-                Intent myIntent  = new Intent(MainActivity.this,ResultActivity.class);
-                myIntent.putExtra("total",String.valueOf(total));
-                myIntent.putExtra("correct",String.valueOf(correct));
-                myIntent.putExtra("incorrect",String.valueOf(wrong));
-                startActivity(myIntent);
+                if(resultt == false) {
+                    Intent myIntent = new Intent(MainActivity.this, ResultActivity.class);
+                    myIntent.putExtra("total", String.valueOf(total));
+                    myIntent.putExtra("correct", String.valueOf(correct));
+                    myIntent.putExtra("incorrect", String.valueOf(wrong));
+
+                    startActivity(myIntent);
+                }
             }
         }.start();
     }
     public double getdistance(double lat1,
-                                  double lat2, double lon1,
-                                  double lon2)
+                              double lat2, double lon1,
+                              double lon2)
     {
 
         // The math module contains a function
@@ -391,21 +403,26 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         // calculate the result
         return(c * r);
     }
+
     @Override
     public void onLocationChanged(Location location) {
-
         Toast.makeText(this,"Location Changed"+location.getLatitude()+","+location.getLongitude(),Toast.LENGTH_SHORT).show();
         if(coord != null) {
             double distance = getdistance(location.getLatitude(), coord.Latitude, location.getLongitude(), coord.Longitude);
             Log.d("TaG", "Distance = " + String.valueOf(distance));
-            if (distance > 15) {
+            if (distance > restricton) {
                 circumferenceRestriction(distance);
             }
         }
     }
     public void circumferenceRestriction(double distance){
-        Toast.makeText(this,"You Are out Of Circumference:"+String.valueOf(distance-15)+" meters",Toast.LENGTH_SHORT).show();
+        Toast.makeText(this,"You Are out Of Circumference:"+String.valueOf(distance-restricton)+" meters",Toast.LENGTH_SHORT).show();
+       openHold();
     }
+public void openHold(){
+    Intent intent = new Intent(MainActivity.this,hold.class);
+    startActivity(intent);
+}
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
 

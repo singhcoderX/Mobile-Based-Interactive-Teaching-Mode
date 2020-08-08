@@ -67,7 +67,6 @@ public class ResultActivity extends AppCompatActivity {
                 t1.setText(question);
                 t2.setText(correct);
                 t3.setText(wrong);
-
             }
         });
 

@@ -21,6 +21,7 @@ import com.google.firebase.database.ValueEventListener;
 
 public class Qustion_Entry extends AppCompatActivity {
     DatabaseReference mDatabase;
+    DatabaseReference mDatabase1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -104,9 +105,7 @@ public class Qustion_Entry extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mDatabase = FirebaseDatabase.getInstance().getReference().child("Questions");
-                //Storing Timer for Quiz
                 DatabaseReference mdb = FirebaseDatabase.getInstance().getReference().child("time");
-                //Storing Questions
                 for(int i = 0;i<Questions_list.size();i++)
                 {
                     mDatabase.child(String.valueOf(i+1)).setValue(Questions_list.get(i));
@@ -139,6 +138,11 @@ public class Qustion_Entry extends AppCompatActivity {
     }
 
     private void open_mainACT() {
+        //removing Questions from Database
+        mDatabase.removeValue();
+        mDatabase1 = FirebaseDatabase.getInstance().getReference();
+        mDatabase1.child("EditQuizLoc").removeValue();
+        mDatabase1.child("time").removeValue();
         Intent intent = new Intent(this,ResultActivity.class);
         startActivity(intent);
     }
