@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     int wrong = 0;
     DatabaseReference ref;
     DatabaseReference mDatabase;
+    DatabaseReference ref_for_restriction;
     LocationManager locationManager;
     Location location;
     coordinate coord;
@@ -46,57 +47,77 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     int restricton;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        restricton = 15;
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //runtime permissions
-        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-            }, 100);
-        }
-        getLocation();//storing location in DB of this app
-        if (locationManager != null) {
-            location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            //Log.d(TAG, location == null ? "NO LastLocation" : location.toString());
-
-            mDatabase = FirebaseDatabase.getInstance().getReference().child("EditQuizLoc");
-            mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    if (!dataSnapshot.exists()){
-                        openHold();
-                        return;
+        ref_for_restriction = FirebaseDatabase.getInstance().getReference().child("restriction");
+        ref_for_restriction.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (!dataSnapshot.exists()){
+                    openHold();
+                    return;
+                }else{
+                    restricton = dataSnapshot.getValue(int.class);
+                    Log.d("TaG", "Restriction in Function:"+String.valueOf(restricton));
+                    Log.d("TaG", "Restriction:"+String.valueOf(restricton));
+                    //runtime permissions
+                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                        }, 100);
                     }
-                    coord = dataSnapshot.getValue(com.example.miniquiz.modal.coordinate.class);
-                    Log.d("TaG", "Latitude Of EditQUiz" + String.valueOf(coord.Latitude));
-                    Log.d("TaG", "Longitude Of EditQUiz" + String.valueOf(coord.Longitude));
-                    Log.d("TaG", "Latitude Of MiniQuiz" + String.valueOf(location.getLatitude()));
-                    Log.d("TaG", "Longitude Of MiniQuiz" + String.valueOf(location.getLongitude()));
+                    getLocation();//storing location in DB of this app
+                    if (locationManager != null) {
+                        location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                        //Log.d(TAG, location == null ? "NO LastLocation" : location.toString());
 
-                    double distance = getdistance(location.getLatitude(), coord.Latitude, location.getLongitude(), coord.Longitude);
-                    Log.d("TaG", "Distance = " + String.valueOf(distance));
-                    if (distance > restricton) {
-                        circumferenceRestriction(distance);
-                    } else {
-                        b1 = (Button) findViewById(R.id.button1);
-                        b2 = (Button) findViewById(R.id.button2);
-                        b3 = (Button) findViewById(R.id.button3);
-                        b4 = (Button) findViewById(R.id.button4);
-
-                        t1_question = (TextView) findViewById(R.id.questionTxt);
-                        timerTxt = (TextView) findViewById(R.id.timerTxt);
-                        updateQuestion();
-                        DatabaseReference timer = FirebaseDatabase.getInstance().getReference().child("time");
-                        timer.addListenerForSingleValueEvent(new ValueEventListener() {
+                        mDatabase = FirebaseDatabase.getInstance().getReference().child("EditQuizLoc");
+                        mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                if (!dataSnapshot.exists()) {
+                                if (!dataSnapshot.exists()){
+                                    openHold();
                                     return;
                                 }
-                                int rev_timer = Integer.parseInt(dataSnapshot.getValue().toString());
-                                reverseTimer(rev_timer * 60, timerTxt);
+                                coord = dataSnapshot.getValue(com.example.miniquiz.modal.coordinate.class);
+                                Log.d("TaG", "Latitude Of EditQUiz" + String.valueOf(coord.Latitude));
+                                Log.d("TaG", "Longitude Of EditQUiz" + String.valueOf(coord.Longitude));
+                                Log.d("TaG", "Latitude Of MiniQuiz" + String.valueOf(location.getLatitude()));
+                                Log.d("TaG", "Longitude Of MiniQuiz" + String.valueOf(location.getLongitude()));
+
+                                double distance = getdistance(location.getLatitude(), coord.Latitude, location.getLongitude(), coord.Longitude);
+                                Log.d("TaG", "Distance = " + String.valueOf(distance));
+                                Log.d("TaG", "Restriction line 100:"+String.valueOf(restricton));
+                                if (distance > restricton) {
+                                    circumferenceRestriction(distance);
+                                } else {
+                                    b1 = (Button) findViewById(R.id.button1);
+                                    b2 = (Button) findViewById(R.id.button2);
+                                    b3 = (Button) findViewById(R.id.button3);
+                                    b4 = (Button) findViewById(R.id.button4);
+
+                                    t1_question = (TextView) findViewById(R.id.questionTxt);
+                                    timerTxt = (TextView) findViewById(R.id.timerTxt);
+                                    updateQuestion();
+                                    DatabaseReference timer = FirebaseDatabase.getInstance().getReference().child("time");
+                                    timer.addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                            if (!dataSnapshot.exists()) {
+                                                return;
+                                            }
+                                            int rev_timer = Integer.parseInt(dataSnapshot.getValue().toString());
+                                            reverseTimer(rev_timer * 60, timerTxt);
+                                        }
+
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                        }
+                                    });
+                                }
                             }
 
                             @Override
@@ -106,13 +127,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         });
                     }
                 }
+            }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                }
-            });
-        }
+            }
+        });
+
 
     }
 
@@ -410,12 +432,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         if(coord != null) {
             double distance = getdistance(location.getLatitude(), coord.Latitude, location.getLongitude(), coord.Longitude);
             Log.d("TaG", "Distance = " + String.valueOf(distance));
+            Log.d("TaG", "Restriction line 434:"+String.valueOf(restricton));
             if (distance > restricton) {
                 circumferenceRestriction(distance);
             }
         }
     }
     public void circumferenceRestriction(double distance){
+        Log.d("TaG", "Restriction line 441:"+String.valueOf(restricton));
         Toast.makeText(this,"You Are out Of Circumference:"+String.valueOf(distance-restricton)+" meters",Toast.LENGTH_SHORT).show();
        openHold();
     }

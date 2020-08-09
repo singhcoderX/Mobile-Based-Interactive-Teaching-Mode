@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     // ...
     Button start_button;
     EditText timer;
+    EditText restriction;
     long count;
     LocationManager locationManager;
     Location location;
@@ -50,10 +51,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         getLocation();//storing location in DB of this app
         if (locationManager != null) {
             location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+            Log.d("TaG", "3rd lat"+String.valueOf(location.getLatitude())+"Long ="+String.valueOf(location.getLongitude()));
             Toast.makeText(this, "" + location.getLatitude() + "," + location.getLongitude(), Toast.LENGTH_SHORT).show();
             //Log.d(TAG, location == null ? "NO LastLocation" : location.toString());
             mDatabase = FirebaseDatabase.getInstance().getReference();
             mDatabase.child("EditQuizLoc").removeValue();
+            mDatabase.child("restriction").removeValue();
             //mDatabase.child("EditQuizLoc").child("Latitude").setValue(String.valueOf(location.getLatitude()));
             //mDatabase.child("EditQuizLoc").child("Longitude").setValue(String.valueOf(location.getLongitude()));
             mDatabase.child("EditQuizLoc").child("Latitude").setValue(location.getLatitude());
@@ -68,6 +72,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             @Override
             public void onClick(View v) {
                 timer = (EditText) findViewById(R.id.time_count);
+                restriction = (EditText) findViewById(R.id.restriction);
+                try {
+                    // checking valid integer using parseInt() method
+                    Integer.parseInt(restriction.getText().toString());
+                    mDatabase.child("restriction").setValue(Integer.valueOf(restriction.getText().toString()));
+                }catch (NumberFormatException e){
+                    Toast.makeText(getApplicationContext(), "Enter Correct distance in integer Meters", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 try {
                     // checking valid integer using parseInt() method
                     Integer.parseInt(timer.getText().toString());
@@ -77,7 +90,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     Toast.makeText(getApplicationContext(), "Enter Correct time in mins", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
+                open_QuestionACT();
             }
         });
     }
@@ -98,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         Manifest.permission.ACCESS_COARSE_LOCATION
                 }, 100);
             }else{
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 5, MainActivity.this);
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 5, MainActivity.this);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -117,6 +130,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     @Override
     public void onLocationChanged(Location location) {
+        DatabaseReference mDB = FirebaseDatabase.getInstance().getReference();
+        mDB.child("EditQuizLoc").removeValue();
+        mDB.child("EditQuizLoc").child("Latitude").setValue(location.getLatitude());
+        mDB.child("EditQuizLoc").child("Longitude").setValue(location.getLongitude());
+        Log.d("TaG", "onLocationChanged: lat: "+String.valueOf(location.getLatitude())+" long: "+String.valueOf(location.getLongitude()));
     }
 
     @Override

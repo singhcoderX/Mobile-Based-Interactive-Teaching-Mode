@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">EditQuiz</string>
+    <string name="restriction_param" />
+    <string name="rest_oaram">Enter Restriction parameter(meters)</string>
 </resources>
