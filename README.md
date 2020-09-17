@@ -31,3 +31,4 @@ There are basically two apps in this project:
 - MiniQuiz App will **automatically detect pressing of Home Button** or **Switching** of App or If MiniQuiz **goes to Background**.
 - **GPS based location** of every Student is uploaded to Firebase after every location change 
 - If Current Location of Student (taking Quiz) from instructor is **more than the defined circumference** MiniQuiz will **detect** it and **end the quiz** and shows the result of the Quiz.
+## [DEMO](https://youtu.be/Qtbs9YP8198)
